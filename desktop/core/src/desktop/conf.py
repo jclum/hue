@@ -83,6 +83,16 @@ SSL_CIPHER_LIST = Config(
   help=_("List of allowed and disallowed ciphers"),
   default="DEFAULT:!aNULL:!eNULL:!LOW:!EXPORT:!SSLv2")
 
+SSL_CLIENT_CERTIFICATE = Config(
+  key="ssl_client_certificate",
+  help=_("Filename of SSL Client CA"),
+  default=None)
+
+SSL_CLIENT_CHECK = Config(
+  key="ssl_client_check",
+  help=_("Client CA check level. Accepted values are 'ignore', 'optional', 'required'"),
+  default="ignore")
+
 LDAP_PASSWORD = Config(
   key="ldap_password",
   help=_("LDAP password of the hue user used for LDAP authentications. For example for LDAP Authentication with HiveServer2."),
@@ -800,6 +810,8 @@ def config_validator(user):
       res.append((SSL_PRIVATE_KEY, unicode(_("SSL private key file should be set to enable HTTPS."))))
     else:
       res.extend(validate_path(SSL_PRIVATE_KEY, is_dir=False))
+    if SSL_CLIENT_CERTIFICATE.get():
+      res.extend(validate_path(SSL_CLIENT_CERTIFICATE, is_dir=False))
 
   # Validate encoding
   if not i18n.validate_encoding(DEFAULT_SITE_ENCODING.get()):
@@ -825,3 +837,4 @@ def config_validator(user):
     res.extend(validate_ldap(user, LDAP))
 
   return res
+

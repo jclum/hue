@@ -1508,6 +1508,15 @@ class CherryPyWSGIServer(object):
     # Paths to certificate and private key files
     ssl_certificate = None
     ssl_private_key = None
+
+    # Options for client cert check
+    CLIENT_CA_INGORE = "ignore"
+    CLIENT_CA_OPTIONAL = "optional"
+    CLIENT_CA_REQUIRED = "required"
+
+    client_ca = None
+    check = CLIENT_CA_INGORE
+
     ssl_cipher_list = "DEFAULT:!aNULL:!eNULL:!LOW:!EXPORT:!SSLv2"
     
     def __init__(self, bind_addr, wsgi_app, numthreads=10, server_name=None,
@@ -1667,6 +1676,39 @@ class CherryPyWSGIServer(object):
             ctx.set_cipher_list(self.ssl_cipher_list)
             ctx.use_privatekey_file(self.ssl_private_key)
             ctx.use_certificate_file(self.ssl_certificate)
+            
+            if self.client_ca:
+                print "Server will be checking client cert with [%s]" % (self.check) 
+                ssl_check_int = None
+                if self.check == self.CLIENT_CA_INGORE:
+                    ssl_check_int = SSL.VERIFY_NONE
+                elif self.check == self.CLIENT_CA_OPTIONAL:
+                    ssl_check_int = SSL.VERIFY_PEER
+                elif self.check == self.CLIENT_CA_REQUIRED:
+                    ssl_check_int = SSL.VERIFY_PEER | SSL.VERIFY_FAIL_IF_NO_PEER_CERT
+                else:
+                    LOG.exception('WSGI (%s) error: %s' % (self, ValueError("server.ssl_client_check must be one of 'ignore','optional','required'")))
+                
+                def verfiy_cb(conn, cert, errno, depth, ok):
+                    # This obviously has to be updated
+                    print 'Got certificate: %s' % cert.get_subject()
+
+                    if not ok:
+                        print "Bad Certs[%s]" % (errno)
+                    else:
+                        print "Certs are fine"
+                    return ok
+
+                print "SSL check int[%d]" % (ssl_check_int)
+
+                #ctx.set_verify_depth(2)
+                #ctx.load_client_ca(self.client_ca)
+                ctx.load_verify_locations(self.client_ca)
+                
+                ctx.set_verify(ssl_check_int, verfiy_cb)
+
+            print "Establishing ssl connection"
+
             self.socket = SSLConnection(ctx, self.socket)
             self.populate_ssl_environ()
             
@@ -1831,4 +1873,5 @@ class CherryPyWSGIServer(object):
                     ssl_environ[wsgikey] = value
         
         self.environ.update(ssl_environ)
+
 
