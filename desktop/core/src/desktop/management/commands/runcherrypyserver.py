@@ -85,11 +85,9 @@ def start_server(options):
         server.ssl_certificate = options['ssl_certificate']
         server.ssl_private_key = options['ssl_private_key']
         server.ssl_cipher_list = options['ssl_cipher_list']
-        print "Configured server ssl with certificate[%s], private key[%s], and ciphers[%s]" % (options['ssl_certificate'], options['ssl_private_key'], options['ssl_cipher_list'])
         if options['ssl_client_ca'] and options['ssl_client_check']:
              server.client_ca = options['ssl_client_ca']
              server.check = options['ssl_client_check']
-             print "SSL client configs are client ca[%s] and check[%s]" % (options['ssl_client_ca'], options['ssl_client_check'])
     try:
         server.bind_server()
         drop_privileges_if_necessary(options)
