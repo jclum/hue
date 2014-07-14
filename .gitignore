@@ -81,6 +81,9 @@ desktop/libs/hadoop/java/dependency-reduced-pom.xml
 # Reviewboard config file
 .reviewboardrc
 
+# Test certs
+desktop/certs/*
+
 # Make files
 JAVASCRIPTLINT.txt
 PYLINT.txt
